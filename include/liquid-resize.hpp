@@ -15,8 +15,9 @@ private:
     std::vector<unsigned char> pixel_data_;
     void writeImage();
     void removeHorizontalSeam(const std::vector<int>& seam);
-    std::vector<int>& findHorizontalSeam() const;
+    std::vector<int> findHorizontalSeam() const;
     int energy(int x, int y) const;
+    int getIndexFromWrappedCoords(int x, int y) const;
 };
 
 #endif /* LIQUID_RESIZE */
