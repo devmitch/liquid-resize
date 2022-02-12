@@ -26,7 +26,7 @@ LiquidResize::LiquidResize(const std::string& path) {
         // should this be a runtime error or should we close nicely?
         throw std::runtime_error(err);
     }
-    std::cout << "w = " << spec.width << " h = " << spec.height << " channels = " << spec.nchannels << "\n";
+    //std::cout << "w = " << spec.width << " h = " << spec.height << " channels = " << spec.nchannels << "\n";
     pixel_data_ = std::vector<unsigned char>(spec.width * spec.height * spec.nchannels);
     inp->read_image(TypeDesc::UINT8, &pixel_data_[0]);
     inp->close();
@@ -63,11 +63,11 @@ int LiquidResize::energy(int x, int y) const {
 // Dynamic programming (bottom-up) approach to find minimum total energy path from top to bottom of image
 // returns the x coordinates of the pixels on each row to be remove
 std::vector<int> LiquidResize::findHorizontalSeam() const {
-    std::cout << "start of find horizontal seam\n";
+    //std::cout << "start of find horizontal seam\n";
     // build cumulative energy matrix through DP approach
     auto cumulative_energy = std::vector<int>(width_ * height_);
-    for (int x = 0; x < width_; ++x) {
-        for (int y = 0; y < height_; ++y) {
+    for (int y = 0; y < height_; ++y) {
+        for (int x = 0; x < width_; ++x) {
             auto idx = getIndexFromWrappedCoords(x, y);
             if (y == 0) {
                 cumulative_energy[idx] = energy(x, y); // dealing with indexes and coords again is sus
@@ -88,7 +88,8 @@ std::vector<int> LiquidResize::findHorizontalSeam() const {
     auto minPathEndX = 0;
     auto minPathSum = std::numeric_limits<int>::max();
     for (int x = 0; x < width_; ++x) {
-        auto idx = (height_ - 1) * width_ + x; // maybe a function for this? if we need idx from coords in future
+        auto idx = getIndexFromWrappedCoords(x, height_ - 1);
+        //auto idx = (height_ - 1) * width_ + x; // maybe a function for this? if we need idx from coords in future
         if (cumulative_energy[idx] < minPathSum) {
             minPathSum = cumulative_energy[idx];
             minPathEndX = x;
@@ -112,26 +113,30 @@ std::vector<int> LiquidResize::findHorizontalSeam() const {
         }
         minPathXCoords[y] = pathXCoordToAdd;
     }
-    std::cout << "end of find horizontal seam\n";
+    //std::cout << "end of find horizontal seam\n";
     return minPathXCoords;
 }
 
 void LiquidResize::removeHorizontalSeam(const std::vector<int> &seam) {
-    std::cout << "start of remove horizontal seam\n";
+    //std::cout << "start of remove horizontal seam\n";
     // 1 less width since we are removing a horizontal seam
-    auto new_pixel_data = std::vector<unsigned char>((width_ - 1) * height_ * nchannels_);
-    for (int x = 0; x < width_; ++x) {
-        for (int y = 0; y < height_; ++y) {
-            if (seam[y] == x) continue;
-            auto old_idx = getIndexFromWrappedCoords(x, y);
-            new_pixel_data.push_back(pixel_data_[old_idx*nchannels_ + 0]);
-            new_pixel_data.push_back(pixel_data_[old_idx*nchannels_ + 1]);
-            new_pixel_data.push_back(pixel_data_[old_idx*nchannels_ + 2]);
+    auto new_pixel_data = std::vector<unsigned char>();
+    auto curr_it = pixel_data_.begin();
+    for (int y = 0; y < height_; ++y) {
+        for (int x = 0; x < width_; ++x) {
+            //std::cout << "seam[y] = " << seam[y] << "\n";
+            if (seam[y] == x) { // seam[y] == x
+                curr_it += 3;
+                continue;
+            }
+            new_pixel_data.push_back(*(curr_it++));
+            new_pixel_data.push_back(*(curr_it++));
+            new_pixel_data.push_back(*(curr_it++));
         }
     }
     width_ = width_ - 1;
     pixel_data_ = new_pixel_data; // i think this is better? since no copy
-    std::cout << "end of remove horizontal seam\n";
+    //std::cout << "end of remove horizontal seam\n";
 }
 
 void LiquidResize::writeImage() {
@@ -149,12 +154,13 @@ void LiquidResize::writeImage() {
 
 // main loop over findHorizontalSeam() and removeHorizontalSeam()
 void LiquidResize::do_horizontal_resize(int perc) {
+    //std::cout << "top left red before seam remove: " << static_cast<int>(pixel_data_[getIndexFromWrappedCoords(0, 0)*nchannels_ + 2]) << "\n";
     // the loops in the above functions probably fuck up if we try to remove too many seams idk
     if (perc > 100 or perc < 10) {
         auto err = "Error: resize percentage must be in range [0, 90]\n";
         throw std::runtime_error(err);
     }
-    // 1 - perc = seams_to_remove*100/width_
+    // 100 - perc = seams_to_remove*100/width_
     auto seams_to_remove = ((100-perc)*width_) / 100;
     std::cout << "seams to remove: " << seams_to_remove << "\n";
     for (int i = 0; i < seams_to_remove; ++i) {
@@ -164,3 +170,4 @@ void LiquidResize::do_horizontal_resize(int perc) {
     }
     writeImage();
 }
+
