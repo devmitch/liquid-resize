@@ -6,7 +6,8 @@
 
 
 int main() {
-    int width_ = 3;
+    // good test shit
+/*    int width_ = 3;
     int height_ = 4;
     int nchannels_ = 3;
     auto pixel_data_ = std::vector<unsigned char>(width_ * height_ * nchannels_);
@@ -33,6 +34,8 @@ int main() {
     }
     for (int i = 0; i < 3; ++i) {
         sum += std::pow(abs(pixel_data_[belowIdx*nchannels_ + i] - pixel_data_[aboveIdx*nchannels_ + i]), 2);
-    }
+    }*/
+    auto resizer = LiquidResize("tower.jpg");
+    resizer.do_horizontal_resize(98);
     return 0;
 }
