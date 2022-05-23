@@ -17,4 +17,6 @@ In your newly set up build directory, run the program:
 ```
 
 ### Examples
-![Alt text](https://raw.github.com/devmitch/liquid-resize/blob/master/examples/water.jpeg?sanitize=true)
+![Original water](examples/water.jpeg?sanitize=true)
+![After resize](examples/output.jpg?sanitize=true)
+
