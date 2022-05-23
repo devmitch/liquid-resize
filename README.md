@@ -18,5 +18,8 @@ In your newly set up build directory, run the program:
 
 ### Examples
 ![Original water](examples/water.jpeg?sanitize=true)
+```bash
+./liquid-resize 50 water.jpeg
+```
 ![After resize](examples/output.jpg?sanitize=true)
 
