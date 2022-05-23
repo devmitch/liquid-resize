@@ -9,12 +9,14 @@ public:
     explicit LiquidResize(std::string const& path);
     void resizeImage(int new_perc);
     void energyImage();
+    void showHorizontalSeam();
 private:
     int height_;
     int width_;
     int nchannels_;
     std::vector<unsigned char> pixel_data_;
     void removeHorizontalSeam();
+    std::vector<int> getHorizontalSeam() const;
     void writeImage();
     int energy(int x, int y) const;
     int getIndex(int x, int y) const;

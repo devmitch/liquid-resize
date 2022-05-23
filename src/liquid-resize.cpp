@@ -66,11 +66,10 @@ void LiquidResize::energyImage() {
     }
     for (auto y = 0; y < height_; y++) {
         for (auto x = 0; x < width_; x++) {
-            auto en = ((float)energy(x, y) / (float)max_energy) * 255;
-            //std::cout << "en = " << en << "\n";
-            new_pixel_data.push_back(en);
-            new_pixel_data.push_back(en);
-            new_pixel_data.push_back(en);
+            auto energy_ratio = ((float)energy(x, y) / (float)max_energy) * 255;
+            new_pixel_data.push_back(energy_ratio);
+            new_pixel_data.push_back(energy_ratio);
+            new_pixel_data.push_back(energy_ratio);
         }
     }
     pixel_data_ = std::move(new_pixel_data);
@@ -80,17 +79,15 @@ void LiquidResize::energyImage() {
 // new_perc between 0 and 100 - 40 means 40% of the size of the original image
 void LiquidResize::resizeImage(int new_perc) {
     int seams_to_remove = ((100-new_perc)*width_)/100;
-//    int seams_to_remove = 1;
-    std::cout << "seams to remove: " << seams_to_remove << "\n";
-    while (seams_to_remove > 0) {
-        std::cout << "on seam no. " << seams_to_remove << "\n";
+    for (auto i = 0; i < seams_to_remove; i++) {
+        std::cout << "Progress: " << i*100/seams_to_remove << "%\r";
+        std::cout.flush();
         removeHorizontalSeam();
-        seams_to_remove--;
     }
     writeImage();
 }
 
-void LiquidResize::removeHorizontalSeam() {
+std::vector<int> LiquidResize::getHorizontalSeam() const {
     auto rows = std::vector<std::vector<int>>();
     auto curr_row = 0;
     auto first_row = std::vector<int>(width_);
@@ -138,6 +135,11 @@ void LiquidResize::removeHorizontalSeam() {
         seam_end_idx = new_seam_end_idx;
     }
 
+    return indices_to_remove;
+}
+
+void LiquidResize::removeHorizontalSeam() {
+    auto const& indices_to_remove = getHorizontalSeam();
     auto new_pixel_data = std::vector<unsigned char>();
     for (auto y = 0; y < height_; y++) {
         for (auto x = 0; x < width_; x++) {
@@ -157,6 +159,26 @@ void LiquidResize::removeHorizontalSeam() {
     width_--;
 }
 
+void LiquidResize::showHorizontalSeam() {
+    auto const& indices_to_remove = getHorizontalSeam();
+    auto new_pixel_data = std::vector<unsigned char>();
+    for (auto y = 0; y < height_; y++) {
+        for (auto x = 0; x < width_; x++) {
+            if (indices_to_remove[y] == x) {
+                new_pixel_data.push_back(255);
+                new_pixel_data.push_back(0);
+                new_pixel_data.push_back(0);
+            } else {
+                new_pixel_data.push_back(pixel_data_[getIndex(x, y) * nchannels_]);
+                new_pixel_data.push_back(pixel_data_[getIndex(x, y) * nchannels_ + 1]);
+                new_pixel_data.push_back(pixel_data_[getIndex(x, y) * nchannels_ + 2]);
+            }
+        }
+    }
+    pixel_data_ = std::move(new_pixel_data);
+    writeImage();
+}
+
 
 void LiquidResize::writeImage() {
     auto filename = "output.jpg";
@@ -168,6 +190,7 @@ void LiquidResize::writeImage() {
     auto spec = ImageSpec(width_, height_, nchannels_, TypeDesc::UINT8);
     outp->open(filename, spec);
     outp->write_image(TypeDesc::UINT8, pixel_data_.data());
-    outp->close ();
+    outp->close();
+    std::cout << "Image written to output.jpg.\n";
 }
 
