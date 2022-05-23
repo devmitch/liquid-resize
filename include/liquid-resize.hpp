@@ -7,17 +7,17 @@
 class LiquidResize {
 public:
     explicit LiquidResize(std::string const& path);
-    void do_horizontal_resize(int perc);
+    void resizeImage(int new_perc);
+    void energyImage();
 private:
     int height_;
     int width_;
     int nchannels_;
     std::vector<unsigned char> pixel_data_;
+    void removeHorizontalSeam();
     void writeImage();
-    void removeHorizontalSeam(const std::vector<int>& seam);
-    std::vector<int> findHorizontalSeam() const;
     int energy(int x, int y) const;
-    int getIndexFromWrappedCoords(int x, int y) const;
+    int getIndex(int x, int y) const;
 };
 
 #endif /* LIQUID_RESIZE */
