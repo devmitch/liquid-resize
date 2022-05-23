@@ -17,4 +17,4 @@ In your newly set up build directory, run the program:
 ```
 
 ### Examples
-![Alt text](https://raw.github.com/potherca-blog/StackOverflow/master/examples/water.jpeg?sanitize=true
+![Alt text](https://raw.github.com/potherca-blog/StackOverflow/master/examples/water.jpeg?sanitize=true)
